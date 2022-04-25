@@ -184,6 +184,10 @@ function help {
     log_plain "${idnt_l1}$(as_bold " --mktd") <option>${fsep_2}Create timestamp named directory."
     log_plain "${idnt_sc1}$(as_bold "-d") [$(as_bold "$(as_light_green "dir")")]${fsep_3}Use $(as_bold "$(as_light_green "dir")") as parent directory."
 
+    log_plain "${idnt_l1}$(as_bold " --vm") [option]${fsep_3}Virtual machine settings."
+    log_plain "${idnt_sc1}$(as_bold "--service") [$(as_bold "$(as_light_green "action")")]${fsep_2}Run $(as_bold "$(as_light_green "action")")."
+
+
 
 
 
@@ -236,6 +240,8 @@ function _info {
     log_plain "\tDo not exit after processing one action argument, default is to exit after one action and do not process"
     log_plain "\targs further, disabling this can sometime confuses."
 
+    log_plain ""
+
     log_plain "$(as_bold "--screen") [option]"
     log_plain "\tAdjust screen related settings, eg brightness."
 
@@ -253,12 +259,29 @@ function _info {
     log_plain "\tDecrease brightness by $(as_bold "$(as_light_green "val")"), if $(as_bold "$(as_light_green "val")") is not given then default factor is $(as_bold "$(as_light_green "5")")."
     log_plain "\tsupplied value must be 0 <= $(as_bold "$(as_light_green "val")") <= 976"
 
+    log_plain ""
+
     log_plain "$(as_bold "--mktd") <option>"
     log_plain "\tCreate timestamp named directory in current directory, if $(as_bold '-d') is not supplied."
 
     log_plain "$idnt_sc1$(as_bold "-d") [$(as_bold "$(as_light_green "dir")")]"
     log_plain "\tUse $(as_bold "$(as_light_green "dir")") as parent directory."
 
+    log_plain ""
+
+    log_plain "$(as_bold "--vm") [option]"
+    log_plain "\tManage virtual machine settings or services."
+
+    log_plain "$idnt_sc1$(as_bold "--service") [$(as_bold "$(as_light_green "action")")]"
+    log_plain "\tRun $(as_bold "$(as_light_green "action")"). It can be one from the following:"
+    log_plain "\t$(as_bold "$(as_light_green "en")")|$(as_bold "$(as_light_green "enable")") to enable vmware services."
+    log_plain "\t$(as_bold "$(as_light_green "dis")")|$(as_bold "$(as_light_green "disable")") to disable vmware services"
+    log_plain "\t$(as_bold "$(as_light_green "start")") to start vmware services."
+    log_plain "\t$(as_bold "$(as_light_green "stop")") to stop vmware services."
+    log_plain "\t$(as_bold "$(as_light_green "restart")") to restart vmware services."
+    log_plain "\t$(as_bold "$(as_light_green "status")") to check status of vmware services."
+    log_plain "\t$(as_bold "$(as_light_green "insmod")") to try to load kernel modules, if services are not starting up."
+    log_plain "\t$(as_bold "$(as_light_green "lsmod")") to print loaded kernel modules."
 
 
 
@@ -406,6 +429,69 @@ function _parse_args_mktd {
     shift_n="$((n1-n2))"
 }
 
+function _parse_args_vm {
+    local n1="$#"
+    local eflag=0
+
+    while [[ $# -ne 0 && $eflag -eq 0 ]]; do
+        local sarg1="$1"
+        case "$sarg1" in 
+            "--service")
+                local action="$2"
+                
+                if [ -z $action ]; then
+                    log_error "Expected action name, found none. Check help."
+                    exit $ERR_ARGS
+                fi
+
+                case $action in
+                    "en"|"enable")
+                        sudo systemctl enable vmware-usbarbitrator vmware vmware-networks-server
+                        ;;
+                    "dis"|"disable")
+                        sudo systemctl disable vmware-usbarbitrator vmware vmware-networks-server
+                        ;;
+                    "start")
+                        sudo systemctl start vmware-usbarbitrator vmware vmware-networks-server
+                        ;;
+                    "stop")
+                        sudo systemctl stop vmware-usbarbitrator vmware vmware-networks-server
+                        ;;
+                    "restart")
+                        sudo systemctl restart vmware-usbarbitrator vmware vmware-networks-server
+                        ;;
+                    "status")
+                        sudo systemctl status vmware-usbarbitrator vmware vmware-networks-server
+                        ;;
+                    "insmod")
+                        sudo modprobe -a vmw_vmci vmmon
+                        ;;
+                    "lsmod")
+                        log_info 'searching for vmmon, vmw_vmci.'
+                        lsmod | grep "vmw_vmci\|vmmon"
+                        ;;
+                    *)
+                        log_error "invalid action '$action'. check help."
+                        exit $ERR_ARGS
+                        ;;
+                esac
+
+                shift
+                shift 
+                ;;
+            *)
+                eflag=1
+                ;;
+        esac
+    done
+    local n2="$#"
+    shift_n="$((n1-n2))"
+
+    if [[ $shift_n -eq 0 ]]; then
+        log_error "Expected options, but found none. Check help."
+        exit $ERR_ARGS
+    fi
+}
 
 
 
@@ -470,6 +556,11 @@ function parse_args {
                 ;;
             "--mktd")
                 _parse_args_mktd "$@"
+                shift $shift_n
+                exit_check;
+                ;;
+            "--vm")
+                _parse_args_vm "$@"
                 shift $shift_n
                 exit_check;
                 ;;
