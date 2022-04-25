@@ -5,7 +5,7 @@
 ###############################################################################
 
 __NAME__="dizzy"
-__VERSION__="0.12"
+__VERSION__="0.13"
 
 # variables
 c_red="$(tput setaf 196)"
@@ -189,6 +189,11 @@ function help {
 
     log_plain "${idnt_l1}$(as_bold " --pass") [$(as_bold "$(as_light_green "len")")] [$(as_bold "$(as_light_green "rep")")] ${fsep_2}Generate random password of length $(as_bold "$(as_light_green "len")")."
 
+    log_plain "${idnt_l1}$(as_bold " --logc") <option>${fsep_2}Log the console."
+    log_plain "${idnt_sc1}$(as_bold " -d") [$(as_bold "$(as_light_green "dir")")]${fsep_3}Use directory $(as_bold "$(as_light_green "dir")") to save the file."
+    log_plain "${idnt_sc1}$(as_bold " -n") [$(as_bold "$(as_light_green "name")")]${fsep_3}Use $(as_bold "$(as_light_green "name")") as file name."
+
+
 
 
 
@@ -290,7 +295,15 @@ function _info {
     log_plain "\tGenerate Random Password, of length $(as_bold "$(as_light_green "len")") and with character repeatable or not, provided in $(as_bold "$(as_light_green "rep")"),"
     log_plain "\twith values $(as_bold "$(as_light_green "0")") for no repeat and $(as_bold "$(as_light_green "1")") for repeat."
 
+    log_plain ""
 
+    log_plain "$(as_bold "--logc") <option>"
+    log_plain "\tLog the console, Run 'script' command, if no options are provided then save as timestamp named"
+    log_plain "\tfile in current dir."
+    log_plain "$idnt_sc1$(as_bold " -d") [$(as_bold "$(as_light_green "dir")")]"
+    log_plain "\t"Use directory $(as_bold "$(as_light_green "dir")") to save the file, directory should exists and writable.
+    log_plain "$idnt_sc1$(as_bold " -n") [$(as_bold "$(as_light_green "name")")]"
+    log_plain "\tUse $(as_bold "$(as_light_green "name")") as file name."
 
 
     
@@ -570,6 +583,58 @@ function _parse_args_gpassword {
     shift_n="$((n1-n2))"
 }
 
+function _parse_args_logc {
+    local n1="$#"
+    local eflag=0
+    local dir=""
+    local name=""
+
+    while [[ $# -ne 0 && $eflag -eq 0 ]]; do
+        local sarg1="$1"
+        case "$sarg1" in 
+            "-d")
+                dir="$2"
+                if [ -z "$dir" ]; then
+                    log_error "Expecting argument value, found none. Check help."
+                    exit $ERR_ARGS
+                elif ! [ -d "$dir" ]; then
+                    log_error "Provided directory($dir) does not exists. check help."
+                    exit $ERR_ARGS
+                fi
+                shift
+                shift 
+                ;;
+            "-n")
+                name="$2"
+                if [ -z "$name" ]; then
+                    log_error "Expecting argument value, found none. Check help."
+                    exit $ERR_ARGS
+                fi
+                shift
+                shift 
+                ;;
+            *)
+                eflag=1
+                ;;
+        esac
+    done
+
+    if [ -z "$name" ]; then
+        name=`date '+%Y_%m_%d_%r' | tr '[: ]' '_'`.dmp
+    else
+        name=`echo $name | tr ' ' '_'`
+    fi
+    if [ -z "$dir" ]; then
+        dir="."
+    fi
+    log_info "log dump will be saved in file('$dir/$name')";
+    log_info "Use ($(as_light_green_2 '^D')|$(as_light_green_2 'exit')|$(as_light_green_2 'ctrl + d')) signal to stop recording."
+
+    script "$dir/$name"
+
+    local n2="$#"
+    shift_n="$((n1-n2))"
+}
 
 
 
@@ -645,6 +710,11 @@ function parse_args {
                 ;;
             "--pass")
                 _parse_args_gpassword "$@"
+                shift $shift_n
+                exit_check;
+                ;;
+            "--logc")
+                _parse_args_logc "$@"
                 shift $shift_n
                 exit_check;
                 ;;
