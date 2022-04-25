@@ -5,7 +5,7 @@
 ###############################################################################
 
 __NAME__="dizzy"
-__VERSION__="0.11"
+__VERSION__="0.12"
 
 # variables
 c_red="$(tput setaf 196)"
@@ -187,6 +187,7 @@ function help {
     log_plain "${idnt_l1}$(as_bold " --vm") [option]${fsep_3}Virtual machine settings."
     log_plain "${idnt_sc1}$(as_bold "--service") [$(as_bold "$(as_light_green "action")")]${fsep_2}Run $(as_bold "$(as_light_green "action")")."
 
+    log_plain "${idnt_l1}$(as_bold " --pass") [$(as_bold "$(as_light_green "len")")] [$(as_bold "$(as_light_green "rep")")] ${fsep_2}Generate random password of length $(as_bold "$(as_light_green "len")")."
 
 
 
@@ -282,6 +283,12 @@ function _info {
     log_plain "\t$(as_bold "$(as_light_green "status")") to check status of vmware services."
     log_plain "\t$(as_bold "$(as_light_green "insmod")") to try to load kernel modules, if services are not starting up."
     log_plain "\t$(as_bold "$(as_light_green "lsmod")") to print loaded kernel modules."
+
+    log_plain ""
+
+    log_plain "$(as_bold "--pass") [$(as_bold "$(as_light_green "len")")] [$(as_bold "$(as_light_green "rep")")]"
+    log_plain "\tGenerate Random Password, of length $(as_bold "$(as_light_green "len")") and with character repeatable or not, provided in $(as_bold "$(as_light_green "rep")"),"
+    log_plain "\twith values $(as_bold "$(as_light_green "0")") for no repeat and $(as_bold "$(as_light_green "1")") for repeat."
 
 
 
@@ -493,6 +500,78 @@ function _parse_args_vm {
     fi
 }
 
+function genPasswd {
+	local len=$1;
+	local rFlag=$2;
+	
+	local p=$((/usr/bin/env perl -)< <(cat <<__END__
+		use v5.28.1;
+		use strict;
+		use warnings;
+		use List::Util 'shuffle';
+
+		my \$alpha = "abcdefghijklmnopqrstuvwxyz";
+		my @lAlpha = split //, \$alpha;
+		my @uAlpha = split //, uc \$alpha;
+		my @chars = split //, '~!@#\$%^&*()_+=-{[}]|\\:;,.</?>';
+		my @num = split //, '0123456789';
+		my @sets = ();
+
+		push @sets, @lAlpha, @chars, @uAlpha, @num;
+		my \$pLen = $len;
+		my \$rep = $rFlag;
+		# 0  -> no repetation
+		# 1  -> repetation
+
+		my \$pc = 1;
+		my \$password = "";
+
+		while (\$pc <= \$pLen){
+			@sets = shuffle @sets;
+			my \$t = \$sets[int rand \$#sets];
+			next if \$rep == 0 and index (\$password, \$t) != -1;
+			\$password .= \$t;  
+			\$pc++;
+		}
+
+		say "password is '\$password'";
+__END__
+	));
+    log_info "$p"
+}
+
+function _parse_args_gpassword {
+    local n1="$#"
+    local len="$1"
+    local rep="$2"
+    shift
+    shift
+    if [ -z "$len" ] || [ -z "$rep" ]; then
+        log_error "Missing argument, check help."
+        exit $ERR_ARGS
+    fi
+
+    if [[ "$len" =~ ^[0-9]+$ ]] && [[ "$rep" =~ ^[0-9]+$ ]]; then
+        if [[ $len -eq 0 ]]; then
+            log_error "Invalid length, check help."
+            exit $ERR_ARGS
+        elif [[ $rep -gt 1 ]]; then
+            log_error "Invalid repeat flag, check help."
+            exit $ERR_ARGS
+        else
+            genPasswd $len $rep
+        fi
+    else
+        log_error "Expected numbers, found string ($len, $rep). check help."
+        exit $ERR_ARGS
+    fi
+
+    local n2="$#"
+    shift_n="$((n1-n2))"
+}
+
+
+
 
 
 
@@ -561,6 +640,11 @@ function parse_args {
                 ;;
             "--vm")
                 _parse_args_vm "$@"
+                shift $shift_n
+                exit_check;
+                ;;
+            "--pass")
+                _parse_args_gpassword "$@"
                 shift $shift_n
                 exit_check;
                 ;;
