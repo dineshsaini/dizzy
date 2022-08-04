@@ -685,14 +685,14 @@ function run_group {
     fi
 
     if ! [ -d "$run_dir/$group" ]; then
-        log_error "run group doesn't exists, check help."
+        log_error "run group('$group') doesn't exists, check help."
         exit $ERR_RUN
     fi
     pushd . > /dev/null
     cd "$run_dir/$group"
-    local run_script="$(find . -mindepth 1 -maxdepth 1 -type f \( -name "$script_name" -o \
-        -name "$script_name.*" \)  -print -quit)"
-    
+    local run_script="$(find . -mindepth 1 -maxdepth 1 \( -type f -o -type l \) -a \
+        \( -name "$script_name" -o -name "$script_name.*" \)  -print -quit)"  
+
     if [ -z "$run_script" ] || ! [ -f "$run_script" ]; then
         log_error "run group('$group'):script('$script_name') not found, check help."
         exit $ERR_RUN
@@ -726,7 +726,7 @@ function _parse_args_list_groups {
     pushd . >/dev/null
     cd "$run_dir"
 
-    find . -mindepth 1 -maxdepth 1 -type d -printf "%f\n"
+    find . -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -printf "%f\n"
 
     popd > /dev/null
 
@@ -746,11 +746,11 @@ function _parse_args_list_scripts {
     
     pushd . > /dev/null
     if ! [ -d "$run_dir/$gname" ]; then
-        log_error "group doesn't exists."
+        log_error "group('$gname') doesn't exists."
         exit $ERR_RUN
     fi
     cd "$run_dir/$gname"
-    find . -mindepth 1 -maxdepth 1 -type f -printf "%f\n"
+    find . -mindepth 1 -maxdepth 1 \( -type f -o -type l \) -printf "%f\n"
 
     popd > /dev/null
 
@@ -764,9 +764,10 @@ function _parse_args_list_recursively {
     pushd . > /dev/null
     cd "$run_dir"
 
-    for g in $(find . -mindepth 1 -maxdepth 1 -type d -printf '%f '); do
+    for g in $(find . -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -printf '%f '); do
         log "$g:"
-        find $g -mindepth 1 -maxdepth 1 -type f -printf "\t%f\n";
+        cd "$run_dir/$g"
+        find . -mindepth 1 -maxdepth 1 \( -type f -o -type l \) -printf "\t%f\n";
     done
 
     popd > /dev/null
