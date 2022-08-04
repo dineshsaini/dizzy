@@ -5,7 +5,7 @@
 ###############################################################################
 
 __NAME__="dizzy"
-__VERSION__="0.13"
+__VERSION__="0.14"
 
 # variables
 c_red="$(tput setaf 196)"
@@ -28,13 +28,14 @@ s_underline="$(tput smul)"
 p_reset="$(tput sgr0)"
 
 home_dir="$(realpath ~)/.dizzy"
+run_dir="$home_dir/run/scripts"
 
 flag_disable_warnings=""    # 'y' --> disable warnings, '' --> display warnings
 flag_verbose=""             # 'y' --> be verbose, '' --> no verbose
 flag_no_exit=""         # '' --> exit after processing one argument, 'y' --> no exit 
 
 ERR_ARGS=1
-
+ERR_RUN=2
 
 function __cont {
     echo "$(echo "$1" | sed -e "s/${p_reset/[/\\[}/$p_reset$2/g")"
@@ -167,38 +168,42 @@ function help {
     local fsep_2="$fsep_1\t"
     local fsep_3="$fsep_2\t"
     local fsep_4="$fsep_3\t"
+    local fsep_5="$fsep_4\t"
 
-    log_plain "${idnt_l1}$(as_bold " -h")|$(as_bold "--help")${fsep_3}Show help and exit."
-    log_plain "${idnt_l1}$(as_bold " --info")${fsep_4}Show detailed information and exit."
-    log_plain "${idnt_l1}$(as_bold " -V")|$(as_bold "--version")${fsep_3}Print version and exit."
-    log_plain "${idnt_l1}$(as_bold " -v")|$(as_bold "--verbose")${fsep_3}Be verbose."
-    log_plain "${idnt_l1}$(as_bold " --no-warn")${fsep_3}Do not display warnings."
-    log_plain "${idnt_l1}$(as_bold " --no-exit")${fsep_3}Do not exit after processing one action argument."
+    log_plain "${idnt_l1}$(as_bold " -h")|$(as_bold "--help")${fsep_4}Show help and exit."
+    log_plain "${idnt_l1}$(as_bold " --info")${fsep_5}Show detailed information and exit."
+    log_plain "${idnt_l1}$(as_bold " -V")|$(as_bold "--version")${fsep_4}Print version and exit."
+    log_plain "${idnt_l1}$(as_bold " -v")|$(as_bold "--verbose")${fsep_4}Be verbose."
+    log_plain "${idnt_l1}$(as_bold " --no-warn")${fsep_4}Do not display warnings."
+    log_plain "${idnt_l1}$(as_bold " --no-exit")${fsep_4}Do not exit after processing one action argument."
 
-    log_plain "${idnt_l1}$(as_bold " --screen") [option]${fsep_2}Change screen settings."
-    log_plain "${idnt_sc1}$(as_bold "--std")${fsep_3}Change brightness to standard."
-    log_plain "${idnt_sc1}$(as_bold "--nmode")${fsep_3}Change brightness to night mode."
-    log_plain "${idnt_sc1}$(as_bold "--inc") <$(as_bold "$(as_light_green "val")")>${fsep_3}Increase brightness by $(as_bold "$(as_light_green "val")")."
-    log_plain "${idnt_sc1}$(as_bold "--dec") <$(as_bold "$(as_light_green "val")")>${fsep_3}Decrease brightness by $(as_bold "$(as_light_green "val")")."
+    log_plain "${idnt_l1}$(as_bold " --screen") [option]${fsep_3}Change screen settings."
+    log_plain "${idnt_sc1}$(as_bold "--std")${fsep_4}Change brightness to standard."
+    log_plain "${idnt_sc1}$(as_bold "--nmode")${fsep_4}Change brightness to night mode."
+    log_plain "${idnt_sc1}$(as_bold "--inc") <$(as_bold "$(as_light_green "val")")>${fsep_4}Increase brightness by $(as_bold "$(as_light_green "val")")."
+    log_plain "${idnt_sc1}$(as_bold "--dec") <$(as_bold "$(as_light_green "val")")>${fsep_4}Decrease brightness by $(as_bold "$(as_light_green "val")")."
 
-    log_plain "${idnt_l1}$(as_bold " --mktd") <option>${fsep_2}Create timestamp named directory."
-    log_plain "${idnt_sc1}$(as_bold "-d") [$(as_bold "$(as_light_green "dir")")]${fsep_3}Use $(as_bold "$(as_light_green "dir")") as parent directory."
+    log_plain "${idnt_l1}$(as_bold " --mktd") <option>${fsep_3}Create timestamp named directory."
+    log_plain "${idnt_sc1}$(as_bold "-d") [$(as_bold "$(as_light_green "dir")")]${fsep_4}Use $(as_bold "$(as_light_green "dir")") as parent directory."
 
-    log_plain "${idnt_l1}$(as_bold " --vm") [option]${fsep_3}Virtual machine settings."
-    log_plain "${idnt_sc1}$(as_bold "--service") [$(as_bold "$(as_light_green "action")")]${fsep_2}Run $(as_bold "$(as_light_green "action")")."
+    log_plain "${idnt_l1}$(as_bold " --vm") [option]${fsep_4}Virtual machine settings."
+    log_plain "${idnt_sc1}$(as_bold "--service") [$(as_bold "$(as_light_green "action")")]${fsep_3}Run $(as_bold "$(as_light_green "action")")."
 
-    log_plain "${idnt_l1}$(as_bold " --pass") [$(as_bold "$(as_light_green "len")")] [$(as_bold "$(as_light_green "rep")")] ${fsep_2}Generate random password of length $(as_bold "$(as_light_green "len")")."
+    log_plain "${idnt_l1}$(as_bold " --pass") [$(as_bold "$(as_light_green "len")")] [$(as_bold "$(as_light_green "rep")")] ${fsep_3}Generate random password of length $(as_bold "$(as_light_green "len")")."
 
-    log_plain "${idnt_l1}$(as_bold " --logc") <option>${fsep_2}Log the console."
-    log_plain "${idnt_sc1}$(as_bold " -d") [$(as_bold "$(as_light_green "dir")")]${fsep_3}Use directory $(as_bold "$(as_light_green "dir")") to save the file."
-    log_plain "${idnt_sc1}$(as_bold " -n") [$(as_bold "$(as_light_green "name")")]${fsep_3}Use $(as_bold "$(as_light_green "name")") as file name."
+    log_plain "${idnt_l1}$(as_bold " --logc") <option>${fsep_3}Log the console."
+    log_plain "${idnt_sc1}$(as_bold " -d") [$(as_bold "$(as_light_green "dir")")]${fsep_4}Use directory $(as_bold "$(as_light_green "dir")") to save the file."
+    log_plain "${idnt_sc1}$(as_bold " -n") [$(as_bold "$(as_light_green "name")")]${fsep_4}Use $(as_bold "$(as_light_green "name")") as file name."
 
-
+    log_plain "${idnt_l1}$(as_bold " -r")|$(as_bold "--run") [$(as_bold "$(as_light_green "group")")] <$(as_bold "$(as_light_green "script")")> <$(as_bold "$(as_light_green "args")")>${fsep_1}Run ($(as_bold "$(as_light_green "script")")|$(as_light_green 'main')) from $(as_bold "$(as_light_green "group")") with $(as_bold "$(as_light_green "args")") list."
+    log_plain "${idnt_l1}$(as_bold "--list-groups")${fsep_4}List run groups."
+    log_plain "${idnt_l1}$(as_bold "--list-scripts") [$(as_bold "$(as_light_green "group")")]${fsep_3}List run $(as_bold "$(as_light_green "group")")'s scripts."
+    log_plain "${idnt_l1}$(as_bold "--list-recursively")${fsep_3}List run groups and their scripts recursively."
 
 
 
     #TODO: [5] INSERT SORT HELP ABOVE THIS LINE, USE BELOW 2 LINES AS EXAMPLE FORMAT
-    #log_plain "${idnt_l1}$(as_bold " -sort")|$(as_bold "--long")${fsep_3}yada yada."
+    #log_plain "${idnt_l1}$(as_bold " -sort")|$(as_bold "--long")${fsep_4}yada yada."
     #log_plain "${idnt_sc1}$(as_bold " -sub")|$(as_bold "--sub_long") [$(as_bold "$(as_light_green "args")")]${fsep_1}more yada yada, check $(as_light_green '--info') for $(as_bold "$(as_light_green 'args')")."
 
     if [ -z "$idnt_l1" ]; then
@@ -305,7 +310,30 @@ function _info {
     log_plain "$idnt_sc1$(as_bold " -n") [$(as_bold "$(as_light_green "name")")]"
     log_plain "\tUse $(as_bold "$(as_light_green "name")") as file name."
 
+    log_plain "$(as_bold "-r")|$(as_bold "--run") [$(as_bold "$(as_light_green "group")")] <$(as_bold "$(as_light_green "script")")> <$(as_bold "$(as_light_green "args")")>"
+    log_plain "\tRun $(as_bold "$(as_light_green "script")") from $(as_bold "$(as_light_green "group")"), if $(as_bold "$(as_light_green "script")") is not provided, then default script $(as_light_green "main") will execute."
+    log_plain "\tAnything after $(as_bold "$(as_light_green "script")") will be assumed as $(as_bold "$(as_light_green "script")")'s arguments, and will be feed to it." 
+    log_plain "\t$(as_bold "$(as_light_green "script")")s are stored at  $(as_light_green "~/.dizzy/run/scripts") as:"
+    log_plain "\t\t$(as_light_green "~/.dizzy/run/scripts")/$(as_bold "$(as_light_green "group")")/$(as_bold "$(as_light_green "script")")s"
+    log_plain "\t$(as_bold "$(as_light_green "script")")s files can have any or no extention, however two same named $(as_bold "$(as_light_green "script")") with different extention is not allowed."
+    log_plain "\tIf there are $(as_bold "$(as_light_green "script")")s with different extentions, then whichever found first will be executed."
+    log_plain "\t$(as_bold "$(as_light_green "script")") argument should be supplied without extention, as they are not respected and will be removed before execution."
+    log_plain "\t$(as_bold "$(as_light_green "group")") & $(as_bold "$(as_light_green "script")") can be named as any legal filename, but without spaces or whitespace character."
 
+    log_plain ""
+
+    log_plain "$(as_bold "--list-groups")"
+    log_plain "\tList all available run groups."
+
+    log_plain ""
+
+    log_plain "$(as_bold "--list-scripts") [$(as_bold "$(as_light_green "group")")]"
+    log_plain "\tList all available scripts from run $(as_bold "$(as_light_green "group")")."
+
+    log_plain ""
+
+    log_plain "$(as_bold "--list-recursively")"
+    log_plain "\tList all available run groups and their scripts recursively."
     
 
     #TODO: [6] INSERT DETAILED DESCRIPTION OF OPTIONS ABOVE THIS LINE, USE BELOW 2 LINES AS EXAMPLE FORMAT.
@@ -315,7 +343,8 @@ function _info {
     log_plain "\n$(as_bold "[$(as_yellow "EXIT CODES")]")"
     log_plain "\t$(as_bold "$__NAME__") exits with status $(as_bold "0") as success, greater than $(as_bold "0") if errors occur."
     log_plain "\t$(as_bold "0") --> success."
-    log_plain "\t$(as_bold "1") --> error during argument parsing."
+    log_plain "\t$(as_bold "1") --> error during arguments parsing."
+    log_plain "\t$(as_bold "2") --> error during run arguments parsing."
 
 
 
@@ -637,9 +666,114 @@ function _parse_args_logc {
 }
 
 
+function run_group {
+    local group="$1"
 
+    if [ -z "$group" ]; then
+        log_error "Empty group name, check help."
+        exit ERR_RUN
+    fi
+    shift
+    
+    local script_name="$1"
+    shift
 
+    if [ -z "$script_name" ]; then
+        script_name="main"
+    else
+        script_name="${script_name%%.*}"
+    fi
 
+    if ! [ -d "$run_dir/$group" ]; then
+        log_error "run group doesn't exists, check help."
+        exit $ERR_RUN
+    fi
+    pushd . > /dev/null
+    cd "$run_dir/$group"
+    local run_script="$(find . -mindepth 1 -maxdepth 1 -type f \( -name "$script_name" -o \
+        -name "$script_name.*" \)  -print -quit)"
+    
+    if [ -z "$run_script" ] || ! [ -f "$run_script" ]; then
+        log_error "run group('$group'):script('$script_name') not found, check help."
+        exit $ERR_RUN
+    fi
+
+    bash "$run_script" "$@"
+    local RETVAL="$?"
+
+    popd > /dev/null
+
+    exit $RETVAL
+}
+
+function _parse_args_run {
+    local n1="$#"
+    if [ $# -le 0 ]; then
+        log_error "group name expected, check help"
+        exit $ERR_RUN
+    fi
+   
+    # consume all argumets as group and its arguments
+    run_group "$@"
+
+    local n2="0"
+    shift_n="$((n1-n2))"
+}
+
+function _parse_args_list_groups {
+    local n1="$#"
+    
+    pushd . >/dev/null
+    cd "$run_dir"
+
+    find . -mindepth 1 -maxdepth 1 -type d -printf "%f\n"
+
+    popd > /dev/null
+
+    local n2="$#"
+    shift_n="$((n1-n2))"
+}
+
+function _parse_args_list_scripts {
+    local n1="$#"
+    local gname="$1"
+    shift
+    
+    if [ -z "$gname" ]; then
+        log_error "group name can't be empty, check help."
+        exit $ERR_RUN
+    fi
+    
+    pushd . > /dev/null
+    if ! [ -d "$run_dir/$gname" ]; then
+        log_error "group doesn't exists."
+        exit $ERR_RUN
+    fi
+    cd "$run_dir/$gname"
+    find . -mindepth 1 -maxdepth 1 -type f -printf "%f\n"
+
+    popd > /dev/null
+
+    local n2="$#"
+    shift_n="$((n1-n2))"
+}
+
+function _parse_args_list_recursively {
+    local n1="$#"
+
+    pushd . > /dev/null
+    cd "$run_dir"
+
+    for g in $(find . -mindepth 1 -maxdepth 1 -type d -printf '%f '); do
+        log "$g:"
+        find $g -mindepth 1 -maxdepth 1 -type f -printf "\t%f\n";
+    done
+
+    popd > /dev/null
+
+    local n2="$#"
+    shift_n="$((n1-n2))"
+}
 
 
 #TODO: [2] INSERT FUNCTION FOR ARG PROCESS ABOVE THIS LINE, USE BELOW 22 LINES AS EXAMPLE FORMAT.
@@ -718,7 +852,26 @@ function parse_args {
                 shift $shift_n
                 exit_check;
                 ;;
-
+            "-r"|"--run")
+                _parse_args_run "$@"
+                shift $shift_n
+                exit_check;
+                ;;
+            "--list-groups")
+                _parse_args_list_groups "$@"
+                shift $shift_n
+                exit_check;
+                ;;
+            "--list-scripts")
+                _parse_args_list_scripts "$@"
+                shift $shift_n
+                exit_check;
+                ;;
+            "--list-recursively")
+                _parse_args_list_recursively "$@"
+                shift $shift_n
+                exit_check;
+                ;;
 
 
 

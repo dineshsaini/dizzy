@@ -11,5 +11,8 @@ mkdir -p $INSTALL_LOC
 cp ./dizzy.sh $INSTALL_LOC/$INSTALL_NAME
 chmod +x $INSTALL_LOC/$INSTALL_NAME
 
+mkdir ~/.dizzy
+mkdir -p ~/.dizzy/run/scripts
+
 echo "Done installing, make sure '$INSTALL_LOC' is configured in your \$PATH variable."
 

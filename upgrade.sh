@@ -3,6 +3,8 @@
 INSTALL_NAME="dizzy"
 INSTALLED_BIN=`which "$INSTALL_NAME" 2> /dev/null`
 
+mkdir -p ~/.dizzy/run/scripts
+
 if [ -n "$INSTALLED_BIN" ]; then
     cp ./dizzy.sh $INSTALLED_BIN
     chmod +x $INSTALLED_BIN
