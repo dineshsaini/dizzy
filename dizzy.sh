@@ -5,7 +5,7 @@
 ###############################################################################
 
 __NAME__="dizzy"
-__VERSION__="0.15"
+__VERSION__="0.16"
 
 # variables
 c_red="$(tput setaf 196)"
@@ -188,6 +188,7 @@ function help {
 
     log_plain "${idnt_l1}$(as_bold " --vm") [option]${fsep_4}Virtual machine settings."
     log_plain "${idnt_sc1}$(as_bold "--service") [$(as_bold "$(as_light_green "action")")]${fsep_3}Run $(as_bold "$(as_light_green "action")")."
+    log_plain "${idnt_sc1}$(as_bold "--build")${fsep_4}Build vmware modules."
 
     log_plain "${idnt_l1}$(as_bold " --pass") [$(as_bold "$(as_light_green "len")")] [$(as_bold "$(as_light_green "rep")")] ${fsep_3}Generate random password of length $(as_bold "$(as_light_green "len")")."
 
@@ -294,6 +295,9 @@ function _info {
     log_plain "\t$(as_bold "$(as_light_green "status")") to check status of vmware services."
     log_plain "\t$(as_bold "$(as_light_green "insmod")") to try to load kernel modules, if services are not starting up."
     log_plain "\t$(as_bold "$(as_light_green "lsmod")") to print loaded kernel modules."
+
+    log_plain "$idnt_sc1$(as_bold "--build")"
+    log_plain "\tBuild vmware modules."
 
     log_plain ""
 
@@ -531,6 +535,10 @@ function _parse_args_vm {
 
                 shift
                 shift 
+                ;;
+            "--build")
+                sudo vmware-modconfig --console --install-all
+                shift
                 ;;
             *)
                 eflag=1
