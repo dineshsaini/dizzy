@@ -5,7 +5,7 @@
 ###############################################################################
 
 __NAME__="dizzy"
-__VERSION__="0.14"
+__VERSION__="0.15"
 
 # variables
 c_red="$(tput setaf 196)"
@@ -200,6 +200,7 @@ function help {
     log_plain "${idnt_l1}$(as_bold "--list-scripts") [$(as_bold "$(as_light_green "group")")]${fsep_3}List run $(as_bold "$(as_light_green "group")")'s scripts."
     log_plain "${idnt_l1}$(as_bold "--list-recursively")${fsep_3}List run groups and their scripts recursively."
 
+    log_plain "${idnt_l1}$(as_bold "--kill-trackers")${fsep_4}Kill gnome data trackers and miners."
 
 
     #TODO: [5] INSERT SORT HELP ABOVE THIS LINE, USE BELOW 2 LINES AS EXAMPLE FORMAT
@@ -335,6 +336,9 @@ function _info {
     log_plain "$(as_bold "--list-recursively")"
     log_plain "\tList all available run groups and their scripts recursively."
     
+    log_plain "$(as_bold "--kill-trackers")"
+    log_plain "\tKill gnome data tracker and miner process(es), remove their data, and configure gnome to not run it again."
+
 
     #TODO: [6] INSERT DETAILED DESCRIPTION OF OPTIONS ABOVE THIS LINE, USE BELOW 2 LINES AS EXAMPLE FORMAT.
     #log_plain "$(as_bold "-h")|$(as_bold "--help")"
@@ -776,6 +780,11 @@ function _parse_args_list_recursively {
     shift_n="$((n1-n2))"
 }
 
+function _parse_args_kill_trackers {
+    curl -sfL https://gist.githubusercontent.com/dineshsaini/caf8fb2d53b315cf32f0d55092ef4c0e/raw/337637460eeb0cb1c4bfef0289f70ec47ac5907f/gistfile1.sh | bash 
+
+    shift_n="0"
+}
 
 #TODO: [2] INSERT FUNCTION FOR ARG PROCESS ABOVE THIS LINE, USE BELOW 22 LINES AS EXAMPLE FORMAT.
 #function _parse_args_<optname> {
@@ -870,6 +879,11 @@ function parse_args {
                 ;;
             "--list-recursively")
                 _parse_args_list_recursively "$@"
+                shift $shift_n
+                exit_check;
+                ;;
+            "--kill-trackers")
+                _parse_args_kill_trackers "$@"
                 shift $shift_n
                 exit_check;
                 ;;
